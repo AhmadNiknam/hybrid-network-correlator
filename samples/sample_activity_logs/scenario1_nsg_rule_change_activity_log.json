@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario1_nsg_rule_change",
+  "events": [
+    {
+      "eventId": "act-1001",
+      "timestamp": "2026-04-20T09:12:00Z",
+      "operationName": "Microsoft.Network/networkSecurityGroups/securityRules/write",
+      "resourceId": "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Network/networkSecurityGroups/nsg-spoke-01/securityRules/deny_443_to_onprem",
+      "status": "Succeeded",
+      "caller": "admin@example.com",
+      "summary": "NSG rule updated: deny TCP/443 to 10.20.30.40/32"
+    },
+    {
+      "eventId": "act-1002",
+      "timestamp": "2026-04-20T08:40:00Z",
+      "operationName": "Microsoft.Compute/virtualMachines/restart/action",
+      "resourceId": "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Compute/virtualMachines/vm-app-01",
+      "status": "Succeeded",
+      "caller": "system",
+      "summary": "VM restart (unrelated)"
+    }
+  ]
+}
+
