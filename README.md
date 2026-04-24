@@ -68,6 +68,13 @@ python -m src.correlator.main --scenario scenario1_nsg_rule_change --format json
 
 # Compact JSON for future dashboard ingestion
 python -m src.correlator.main --scenario scenario1_nsg_rule_change --format dashboard
+
+# Notification mode (safe by default)
+# - Default is "--notify none" (no behavior change)
+# - Teams is guarded by environment flags; see docs/enterprise-notifications.md
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format text --notify none
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format text --notify teams
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format dashboard --notify teams
 ```
 
 Scenario slugs included:

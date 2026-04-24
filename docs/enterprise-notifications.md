@@ -40,6 +40,23 @@ Do **not** store webhook URLs in source control.
   - `TEAMS_ENABLED=true`
   - `TEAMS_WEBHOOK_URL=<your webhook URL>`
 
+## CLI usage (Teams notifications)
+
+The CLI can optionally invoke the notification dispatcher after generating the incident report.
+
+Examples:
+
+```powershell
+python -m src.correlator.main --scenario scenario1 --format text --notify none
+python -m src.correlator.main --scenario scenario1 --format text --notify teams
+python -m src.correlator.main --scenario scenario1 --format dashboard --notify teams
+```
+
+Notes:
+
+- In `--format text`, the CLI prints a short `Notification result (teams): ...` line after the report.
+- In `--format json` and `--format dashboard`, the report JSON remains on stdout; the notification result is printed to stderr to keep stdout machine-parseable.
+
 ## Enablement guardrails (important)
 
 Real Teams delivery occurs **only** when all are true:

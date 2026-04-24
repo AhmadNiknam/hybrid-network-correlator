@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from .loader import load_scenario
 from .reporter import build_incident_summary, render_admin_text, to_dashboard_dict, to_json_dict
 from .scorer import score_probable_causes
+from ..notifications.dispatcher import dispatch_notification, prepare_webhook_notification
+from ..notifications.models import NotificationChannel, NotificationRecipient
 
 
 def _repo_root_from_here() -> Path:
@@ -49,21 +52,54 @@ def main(argv: list[str] | None = None) -> int:
         choices=["text", "json", "dashboard"],
         help="Output format: text (default), json (detailed), dashboard (compact JSON)",
     )
+    parser.add_argument(
+        "--notify",
+        default="none",
+        choices=["none", "teams"],
+        help="Notification mode: none (default), teams (safe Teams webhook scaffolding)",
+    )
     args = parser.parse_args(argv)
+
+    notify_mode = str(getattr(args, "notify", "none") or "none").strip().lower()
 
     if args.format == "json":
         report = run(args.scenario)
         print(json.dumps(report, indent=2, sort_keys=True))
+        if notify_mode == "teams":
+            # Keep stdout JSON stable; print notification result to stderr.
+            recipient = NotificationRecipient(channel=NotificationChannel.WEBHOOK, address="teams/webhook")
+            msg = prepare_webhook_notification(incident_summary=report, recipient=recipient)
+            result = dispatch_notification(message=msg, recipient=recipient)
+            print(
+                f"Notification result (teams): status={result.status}, ok={result.ok}, simulated={result.simulated}",
+                file=sys.stderr,
+            )
         return 0
 
     alert, ranked, report = _run_full(args.scenario)
     if args.format == "dashboard":
         payload = to_dashboard_dict(alert=alert, ranked=ranked, incident_summary=report)
         print(json.dumps(payload, indent=2, sort_keys=True))
+        if notify_mode == "teams":
+            # Keep stdout JSON stable; print notification result to stderr.
+            recipient = NotificationRecipient(channel=NotificationChannel.WEBHOOK, address="teams/webhook")
+            msg = prepare_webhook_notification(incident_summary=payload, recipient=recipient)
+            result = dispatch_notification(message=msg, recipient=recipient)
+            print(
+                f"Notification result (teams): status={result.status}, ok={result.ok}, simulated={result.simulated}",
+                file=sys.stderr,
+            )
         return 0
 
     # text (default)
     print(render_admin_text(alert=alert, ranked=ranked, incident_summary=report))
+    if notify_mode == "teams":
+        # Use the dashboard-style compact shape for notifications (stable keys for templates).
+        payload = to_dashboard_dict(alert=alert, ranked=ranked, incident_summary=report)
+        recipient = NotificationRecipient(channel=NotificationChannel.WEBHOOK, address="teams/webhook")
+        msg = prepare_webhook_notification(incident_summary=payload, recipient=recipient)
+        result = dispatch_notification(message=msg, recipient=recipient)
+        print(f"Notification result (teams): status={result.status}, ok={result.ok}, simulated={result.simulated}")
     return 0
 
 
