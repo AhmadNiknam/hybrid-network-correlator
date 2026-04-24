@@ -8,3 +8,65 @@ __pycache__/
 *.log
 .DS_Store
 Thumbs.db
+
+# Python packaging / build
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Virtual environments (common names)
+venv/
+env/
+.env/
+.venv/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# Secrets / local config (never commit)
+*.secret
+*.secrets
+secrets/
+*.pem
+*.pfx
+*.p12
+*.cer
+*.crt
+*.key
+*.csr
+*.der
+*.jks
+*.kdbx
+*.keystore
+*.ovpn
+*.rdp
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Local app/tooling config
+*.local.json
+*.local.yaml
+*.local.yml
+*.local.toml
+*.local.ini
+*.local.config
+
+# Test / run outputs
+out/
+output/
+outputs/
+tmp/
+temp/
+artifacts/
+test-results/
+test_output/
