@@ -1,6 +1,7 @@
 ## Hybrid Network Correlator
 
 [![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![CI](https://github.com/AhmadNiknam/hybrid-network-correlator/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/AhmadNiknam/hybrid-network-correlator/actions/workflows/python-tests.yml)
 ![MVP](https://img.shields.io/badge/Status-MVP-brightgreen)
 ![Tests](https://img.shields.io/badge/Tests-unittest%20(local)-informational)
 ![Azure Hybrid Monitoring Concept](https://img.shields.io/badge/Azure-Hybrid%20Monitoring%20Concept-0078D4?logo=microsoftazure&logoColor=white)
@@ -111,6 +112,10 @@ More sanitized sample reports live in `samples/sample_outputs/`.
 ```powershell
 python -m unittest discover -s src\tests -p "test_*.py"
 ```
+
+### Continuous Integration
+
+Unit tests run automatically in GitHub Actions on **push** and **pull request**. See the **CI** badge above and the workflow runs under the repository’s **Actions** tab.
 
 ### Configuration (.env)
 
