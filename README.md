@@ -9,7 +9,7 @@
 
 ### Release information
 
-- **Current stable version**: **v1.0.0**
+- **Current stable version**: **v1.1.0**
 - **Release status**: **Public MVP**
 
 ### Trust and safety statement
@@ -40,11 +40,13 @@ When “Azure VM → on‑prem endpoint” connectivity fails, responders often 
   - Deterministic scoring over a small hypothesis set:
     - `NSG_CHANGE`, `ROUTE_UDR_CHANGE`, `VPN_GATEWAY_ISSUE`, `DNS_ISSUE`, `UNKNOWN`
   - Output formats: `text`, `json`, `dashboard`
+  - Notification layer **scaffolding only** (email/SMS/webhook models + templates + simulated dispatch; no live sending)
   - Unit tests verifying stable outputs and safety constraints
 - **What is intentionally not implemented yet**:
   - Live Azure query execution/authentication
   - Any “write” actions or automated remediation
   - Automatic PowerShell execution / packet capture / live probing
+  - Live notification delivery (no real email/SMS/webhook sending in the MVP)
 
 ### Quick start (CLI)
 
@@ -141,6 +143,19 @@ The MVP includes unit tests validating output stability and safety boundaries ac
 
 For the full backlog, see `docs/backlog.md`.
 
+### Example future notification flow (not implemented yet)
+
+The notification layer is included today to standardize message shapes and delivery-channel formatting while staying safe and offline.
+When live delivery is implemented later, an end-to-end flow is expected to look like:
+
+1. Correlate an incident from an alert payload (plus optional evidence bundle).
+2. Render notification content for the selected channel(s):
+   - Email: detailed incident report
+   - SMS: short paging-style summary
+   - Webhook: compact JSON payload for ticketing/chat-ops
+3. Dispatch via a provider integration (future), with audit logging and explicit enablement.
+4. Confirm delivery outcomes (success/failure metadata) without exposing secrets or contact details in logs.
+
 ### Contribution / learning note
 
 This project is intentionally scoped as a **portfolio-grade MVP**: small, explainable, and safe. If you’re using it to learn hybrid monitoring patterns, a good path is:
@@ -157,3 +172,5 @@ This project is intentionally scoped as a **portfolio-grade MVP**: small, explai
 - `docs/backlog.md`: phased roadmap and next recommended work
 - `docs/powershell-diagnostics.md`: safe, read-only Windows/on-prem evidence collection scripts
 - `docs/release-notes-v1.md`: v1.0.0 public MVP release notes
+- `docs/release-notes-v1.1.md`: v1.1.0 release notes (notification scaffolding and safety model)
+- `docs/notifications.md`: notification layer scaffolding (simulated/prepare-only)

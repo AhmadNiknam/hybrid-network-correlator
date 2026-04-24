@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.0 - 2026-04-23
+
+### Added
+- Notification layer scaffolding (prepare-only) to format incident reports for future delivery channels.
+- Email, SMS, and webhook notification models.
+- Safe simulated dispatch behavior (no live sending).
+- Notification documentation under `docs/notifications.md`.
+
+### Security
+- No live sending: the MVP does not send real email/SMS/webhook notifications.
+- No real contact details in the repository: examples use placeholders and recommend environment variables.
+- No external API calls: notification dispatch is simulated and does not invoke provider SDKs or network requests.
+
 ## v1.0.0 - 2026-04-23
 
 ### Added
