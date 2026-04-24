@@ -1,0 +1,27 @@
+Hybrid Network Correlator - Admin Report
+
+Incident ID: INC-0001
+Scenario: scenario1_nsg_rule_change
+Impacted target: vm-app-01 -> 10.20.30.40:443
+Time window: 2026-04-20T09:10:00Z to 2026-04-20T09:30:00Z
+
+Top 3 probable causes:
+1. NSG_CHANGE (confidence=0.90, score=9)
+2. VPN_GATEWAY_ISSUE (confidence=0.10, score=1)
+3. UNKNOWN (confidence=0.00, score=0)
+
+Confidence (top cause): 0.90
+
+Key evidence:
+- Symptom suggests hard block/unreachable, consistent with policy block (NSG/ACL)
+- Activity change near incident window: act-1001 NSG securityRules/write
+- Connectivity probe failed to 10.20.30.40:443: obs-2001
+- Telemetry indicates NSG blocking flow: obs-2002 blocked (Matched rule deny_443_to_onprem on nsg-spoke-01)
+
+Recommended next checks:
+- Review effective NSG rules on the VM NIC/subnet for the destination/port
+- Confirm the recent NSG rule change was intended; revert/adjust priority if not
+
+Summary:
+Probable cause: a recent NSG rule change is blocking traffic between vm-app-01 and 10.20.30.40:443. Supporting evidence: act-1001, obs-2001, obs-2002.
+

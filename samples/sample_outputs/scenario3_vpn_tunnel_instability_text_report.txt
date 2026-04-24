@@ -1,0 +1,26 @@
+Hybrid Network Correlator - Admin Report
+
+Incident ID: INC-0003
+Scenario: scenario3_vpn_tunnel_instability
+Impacted target: vm-batch-03 -> db01.onprem.local:1433
+Time window: 2026-04-22T02:00:00Z to 2026-04-22T02:30:00Z
+
+Top 3 probable causes:
+1. VPN_GATEWAY_ISSUE (confidence=0.80, score=8)
+2. DNS_ISSUE (confidence=0.10, score=1)
+3. UNKNOWN (confidence=0.00, score=0)
+
+Confidence (top cause): 0.80
+
+Key evidence:
+- Intermittent/packet loss symptoms are consistent with tunnel instability
+- Connectivity probe degraded to db01.onprem.local:1433: obs-2201
+- VPN tunnel health degraded: obs-2203 degraded (Tunnel flap detected; 3 drops in last 10 minutes)
+
+Recommended next checks:
+- Check VPN gateway/tunnel diagnostics for drops, BGP issues, and packet loss during the incident window
+- Validate on-prem VPN device status and ISP stability for the same time window
+
+Summary:
+Probable cause: VPN gateway/tunnel instability is impacting connectivity between vm-batch-03 and db01.onprem.local:1433. Supporting evidence: obs-2201, obs-2203.
+
