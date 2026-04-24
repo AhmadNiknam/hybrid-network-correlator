@@ -20,12 +20,27 @@ class TestAzureConfig(unittest.TestCase):
         os.environ.pop("AZURE_CLIENT_SECRET", None)
         os.environ.pop("AZURE_SUBSCRIPTION_ID", None)
         os.environ.pop("LOG_ANALYTICS_WORKSPACE_ID", None)
+        os.environ.pop("LIVE_AZURE_ENABLED", None)
 
         cfg = load_azure_config(strict=False)
+        self.assertFalse(cfg.live_azure_enabled)
         self.assertFalse(cfg.is_configured)
 
-    def test_load_strict_requires_all(self) -> None:
+    def test_load_strict_does_not_require_vars_when_live_disabled(self) -> None:
         os.environ.pop("AZURE_TENANT_ID", None)
+        os.environ.pop("AZURE_CLIENT_ID", None)
+        os.environ.pop("AZURE_CLIENT_SECRET", None)
+        os.environ.pop("AZURE_SUBSCRIPTION_ID", None)
+        os.environ.pop("LOG_ANALYTICS_WORKSPACE_ID", None)
+        os.environ["LIVE_AZURE_ENABLED"] = "false"
+
+        cfg = load_azure_config(strict=True)
+        self.assertFalse(cfg.live_azure_enabled)
+        self.assertFalse(cfg.is_configured)
+
+    def test_load_strict_requires_all_only_when_live_enabled(self) -> None:
+        os.environ.pop("AZURE_TENANT_ID", None)
+        os.environ["LIVE_AZURE_ENABLED"] = "true"
         with self.assertRaises(ValueError) as ctx:
             load_azure_config(strict=True)
         self.assertIn("AZURE_TENANT_ID", str(ctx.exception))
@@ -36,9 +51,11 @@ class TestAzureConfig(unittest.TestCase):
         os.environ["AZURE_CLIENT_SECRET"] = "secret"
         os.environ["AZURE_SUBSCRIPTION_ID"] = "sub"
         os.environ["LOG_ANALYTICS_WORKSPACE_ID"] = "workspace"
+        os.environ["LIVE_AZURE_ENABLED"] = "true"
 
         cfg = load_azure_config(strict=True)
         self.assertTrue(cfg.is_configured)
+        self.assertTrue(cfg.live_azure_enabled)
         self.assertEqual(cfg.tenant_id, "tenant")
         self.assertEqual(cfg.client_id, "client")
         self.assertEqual(cfg.client_secret, "secret")

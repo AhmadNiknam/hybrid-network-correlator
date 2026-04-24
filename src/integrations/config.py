@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class AzureConfig:
+    live_azure_enabled: bool
     tenant_id: str | None
     client_id: str | None
     client_secret: str | None
@@ -33,15 +34,28 @@ def _get_env(name: str) -> str | None:
     return value or None
 
 
+def _get_bool_env(name: str, *, default: bool = False) -> bool:
+    raw = _get_env(name)
+    if raw is None:
+        return default
+    value = raw.lower()
+    if value in {"1", "true", "yes", "y", "on"}:
+        return True
+    if value in {"0", "false", "no", "n", "off"}:
+        return False
+    return default
+
+
 def load_azure_config(*, strict: bool = False) -> AzureConfig:
     """
     Load Azure integration settings from environment variables.
 
     In Phase 2 (scaffolding), we support "mock mode" where these values may be absent.
-    If strict=True, missing values raise ValueError.
+    If strict=True, missing values raise ValueError only when LIVE_AZURE_ENABLED=true.
     """
 
     cfg = AzureConfig(
+        live_azure_enabled=_get_bool_env("LIVE_AZURE_ENABLED", default=False),
         tenant_id=_get_env("AZURE_TENANT_ID"),
         client_id=_get_env("AZURE_CLIENT_ID"),
         client_secret=_get_env("AZURE_CLIENT_SECRET"),
@@ -49,7 +63,7 @@ def load_azure_config(*, strict: bool = False) -> AzureConfig:
         log_analytics_workspace_id=_get_env("LOG_ANALYTICS_WORKSPACE_ID"),
     )
 
-    if strict and not cfg.is_configured:
+    if strict and cfg.live_azure_enabled and not cfg.is_configured:
         missing = []
         if not cfg.tenant_id:
             missing.append("AZURE_TENANT_ID")

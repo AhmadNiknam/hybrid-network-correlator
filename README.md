@@ -19,6 +19,7 @@ This repository is designed to be safe to evaluate and run in a local environmen
 - **Read-only / safe scaffolding**: the MVP uses mock fixtures and deterministic logic; Azure integration is scaffolded as placeholders.
 - **No destructive Azure actions**: there are no automated “write” operations, remediation steps, or resource-modifying commands.
 - **Prepare-only evidence guidance**: evidence collection outputs are manifests describing what to collect; they do not execute diagnostics automatically.
+- **Live Azure readiness (future)**: live Azure read-only integration is **disabled by default** and is not implemented yet. See `docs/live-azure-readiness.md`.
 
 ### Elevator pitch
 
@@ -110,6 +111,14 @@ More sanitized sample reports live in `samples/sample_outputs/`.
 ```powershell
 python -m unittest discover -s src\tests -p "test_*.py"
 ```
+
+### Configuration (.env)
+
+This repo includes a safe template at `.env.example`.
+
+- Copy `.env.example` to `.env` locally.
+- Keep `LIVE_AZURE_ENABLED=false` (default). Live Azure integration is not implemented yet.
+- Never commit `.env` or any secrets.
 
 ### Tested modules (unit tests)
 

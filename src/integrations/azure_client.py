@@ -21,9 +21,14 @@ class AzureClient:
     """
     Phase 2 read-only scaffolding client.
 
-    - No Azure SDK dependency yet.
-    - No authentication performed yet (placeholder only).
-    - Supports mock-first execution by returning provided mock responses.
+    Design constraints / guardrails:
+    - No write operations (create/update/patch/put/post/delete) against Azure resources.
+    - No resource modification or deletion.
+    - No packet capture execution or diagnostic command execution.
+
+    Behavior:
+    - If LIVE_AZURE_ENABLED=false (default): always safe, simulated responses (optionally overridden by provided mocks).
+    - If LIVE_AZURE_ENABLED=true: still read-only, but live SDK/API execution is not implemented yet in this MVP.
     """
 
     def __init__(
@@ -41,6 +46,19 @@ class AzureClient:
     def config(self) -> AzureConfig:
         return self._config
 
+    @property
+    def live_enabled(self) -> bool:
+        return bool(self._config.live_azure_enabled)
+
+    def _require_live_ready(self) -> None:
+        if not self.live_enabled:
+            return
+        if not self._config.is_configured:
+            raise ValueError(
+                "LIVE_AZURE_ENABLED=true but required Azure environment variables are missing. "
+                "See .env.example for required variables."
+            )
+
     def authenticate(self) -> None:
         """
         Placeholder for future auth.
@@ -49,11 +67,11 @@ class AzureClient:
         - DefaultAzureCredential (managed identity / dev auth)
         - ClientSecretCredential (env vars) if needed
         """
-        if not self._config.is_configured:
-            # In mock mode, do nothing.
+        if not self.live_enabled:
+            # Mock mode: do nothing.
             return
-        # Live authentication intentionally not implemented in scaffolding.
-        raise NotImplementedError("Live Azure authentication is not implemented (Phase 2 scaffolding).")
+        self._require_live_ready()
+        raise NotImplementedError("Live read-only Azure authentication is not implemented yet.")
 
     def query_log_analytics(self, *, workspace_id: str | None = None, query: str) -> AzureQueryResult:
         """
@@ -65,13 +83,14 @@ class AzureClient:
         if query in self._mock_log_analytics:
             return AzureQueryResult(query=query, rows=self._mock_log_analytics[query], source="mock")
 
-        if not self._config.is_configured:
-            raise RuntimeError(
-                "Azure config not set and no mock response provided for this query."
-            )
+        if not self.live_enabled:
+            # Safe simulated response for offline MVP operation.
+            return AzureQueryResult(query=query, rows=[], source="mock")
+
+        self._require_live_ready()
 
         _ = workspace_id or self._config.log_analytics_workspace_id
-        raise NotImplementedError("Live Log Analytics queries are not implemented (Phase 2 scaffolding).")
+        raise NotImplementedError("Live read-only integration not implemented yet.")
 
     def get_activity_logs(self, *, minutes: int = 60) -> list[dict[str, Any]]:
         """
@@ -83,9 +102,12 @@ class AzureClient:
         if self._mock_activity_logs is not None:
             return list(self._mock_activity_logs)
 
-        if not self._config.is_configured:
-            raise RuntimeError("Azure config not set and no mock activity logs provided.")
+        if not self.live_enabled:
+            # Safe simulated response for offline MVP operation.
+            return []
+
+        self._require_live_ready()
 
         _ = minutes
-        raise NotImplementedError("Live Activity Logs are not implemented (Phase 2 scaffolding).")
+        raise NotImplementedError("Live read-only integration not implemented yet.")
 
