@@ -1,96 +1,107 @@
-## Architecture (documentation-first)
+## Architecture (implemented MVP + forward path)
 
-This document describes the **intended MVP architecture** and the incremental path to later phases. It is deliberately implementation-agnostic and focuses on **data contracts**, **flow**, and **responsibilities**.
+This document describes the **current implemented MVP architecture** and the next-step integration path. It focuses on **module responsibilities**, **data flow**, and the **safety model** (read-only / prepare-only).
 
 ### MVP outcome
 
-Given an incident affecting **Azure VM → on-prem endpoint** connectivity, produce a **probable-cause summary** backed by evidence.
+Given a connectivity incident affecting **Azure VM → on-prem endpoint**, produce:
 
-### High-level components
+- a ranked list of probable causes with confidence
+- supporting and counter evidence references
+- administrator-oriented “next checks”
+- optional compact JSON payload for future dashboards
 
-- **IncidentInput**: a structured “alert payload” describing the VM, endpoint, time window, and symptoms.
-- **EvidenceSources**: structured evidence events relevant to the incident window.
-  - Phase 1: mock JSON
-  - Phase 2: read-only Log Analytics (KQL)
-  - Phase 3: diagnostic evidence collection (still read-only)
-- **Normalizer**: converts evidence from various sources into a consistent internal event model.
-- **CorrelationRules**: deterministic rules that map evidence to hypotheses and scoring.
-- **ScoringEngine**: computes confidence scores and selects top hypotheses.
-- **ReportGenerator**: produces a short, IT-admin-friendly report.
+### Current module architecture
 
-### Data flow
+The MVP is implemented as a small Python module set under `src/`:
+
+- **`src/correlator/` (correlation engine)**
+  - `main.py`: CLI entrypoint; orchestrates scenario load → scoring → rendering
+  - `loader.py`: loads deterministic JSON fixtures from `samples/` and resolves scenario slugs
+  - `scorer.py`: deterministic, rule-based scoring and confidence computation
+  - `reporter.py`: renders output formats (`text`, `json`, `dashboard`) from the scored result
+  - `models.py`: dataclasses/enums for alert, evidence, and report structures
+- **`src/evidence/` (evidence scaffolding; prepare-only)**
+  - `manifest.py`: evidence manifest model + safety notes + “recommended evidence” inference
+  - `collectors.py`: creates “collection action requests” (packet capture, diagnostics script, connectivity tests) as data only
+  - `packager.py`: writes evidence manifest JSON under `samples/sample_outputs/evidence_manifests/`
+- **`src/integrations/` (Azure scaffolding; read-only placeholders)**
+  - `config.py`: loads Azure settings from environment variables (optional in mock mode)
+  - `azure_client.py`: mock-first client shape with explicit `NotImplementedError` for live calls
+  - `kql_queries.py`: KQL query templates (placeholders; not executed live in MVP)
+
+### Data flow: mock alert → incident summary
+
+At runtime, the CLI reads a scenario’s fixtures and produces a report:
 
 ```mermaid
 flowchart TD
-  alertPayload[AlertPayload] --> normalizer[Normalizer]
-  evidenceInputs[EvidenceInputs] --> normalizer
-  normalizer --> eventModel[NormalizedEvents]
-  eventModel --> rules[CorrelationRules]
-  rules --> scoring[ScoringEngine]
-  scoring --> report[ProbableCauseReport]
+  cli[CLI: python -m src.correlator.main] --> load[loader.load_scenario]
+  load --> alert[AlertPayload fixture]
+  load --> activity[ActivityLog fixture]
+  load --> telemetry[TelemetryBundle fixture]
+  alert --> score[scorer.score_probable_causes]
+  activity --> score
+  telemetry --> score
+  score --> ranked[Ranked causes + evidence lines + next checks]
+  ranked --> summarize[reporter.build_incident_summary]
+  summarize --> out[Output: text / json / dashboard]
 ```
 
-### Core data contracts (MVP-level)
+Key points:
 
-#### AlertPayload (conceptual fields)
+- **Scenario source of truth** is `samples/` (fixtures are deterministic and safe).
+- The scoring engine only considers evidence **within the incident time window**.
+- Evidence references are intentionally human-traceable IDs:
+  - activity events typically look like `act-*`
+  - telemetry observations typically look like `obs-*`
 
-- **incidentId**: string (optional)
-- **timeWindow**: start/end timestamps
-- **azureVm**: name/resourceId, subscription (placeholder values allowed)
-- **onPremEndpoint**: ipOrFqdn, ports/protocols (optional)
-- **symptoms**: list (loss/latency/unreachable/port-specific)
+### Evidence manifest flow (prepare-only)
 
-#### NormalizedEvent (conceptual fields)
+Separately from the correlation report, the MVP includes a prepare-only “what to collect next” manifest. This is designed to be attached to an incident ticket or used by an operator without automating execution.
 
-- **timestamp**
-- **source**: activity/telemetry/diagnostic
-- **category**: nsg/udr/gateway/dns/firewall/unknown
-- **resourceId**: Azure resource reference (when applicable)
-- **summary**: short human-readable description
-- **attributes**: key/value details (kept minimal in MVP)
+```mermaid
+flowchart TD
+  incident[Incident summary JSON] --> manifest[build_evidence_manifest_from_incident_summary]
+  manifest --> actions[Optional: add collectionActions requests]
+  actions --> write[packager.write_manifest_json]
+  write --> file[samples/sample_outputs/evidence_manifests/*.json]
+```
 
-#### Hypothesis (MVP set)
+Safety properties:
 
-The MVP should start with a small, practical set such as:
+- No PowerShell is executed by the Python layer.
+- No packet capture is started by the Python layer.
+- No live connectivity probes are executed by the Python layer.
 
-- **Recent NSG change impacted traffic**
-- **Recent route/UDR change altered path**
-- **VPN/ExpressRoute gateway degradation**
-- **Name resolution/DNS issue**
-- **On-prem firewall change or block**
-- **Insufficient evidence / unknown**
+### Future Azure read-only integration flow (Phase 2 scaffolding)
 
-### Rule-based correlation (Phase 1)
+The repo includes placeholders for a read-only Azure integration path. The goal is to keep the same internal models while swapping the evidence source from fixtures to live queries.
 
-Rules should be:
+```mermaid
+flowchart TD
+  alert[AlertPayload] --> query[Azure read-only query layer]
+  query --> kql[KQL templates]
+  kql --> loganalytics[Log Analytics results]
+  query --> activity[Activity log results]
+  loganalytics --> normalize[Map to internal observation/event shapes]
+  activity --> normalize
+  normalize --> score[Deterministic scoring]
+  score --> report[Admin outputs]
+```
 
-- Deterministic and explainable (“if evidence A and symptom B, increase score for hypothesis H”)
-- Conservative with confidence when evidence is missing or ambiguous
-- Able to attach “supporting evidence” and “contradicting evidence”
+Current state:
 
-### Evidence model by phase
-
-- **Phase 1 (mock)**:
-  - Static JSON fixtures for activity changes and telemetry markers
-  - Pre-baked “diagnostic summaries” as evidence events
-- **Phase 2 (read-only Azure)**:
-  - KQL queries to fetch:
-    - Activity changes near the incident window
-    - Relevant network telemetry signals (where available)
-- **Phase 3 (evidence collection)**:
-  - Runbooks/scripts to collect diagnostics (read-only), then normalize into events
-- **Phase 4 (dashboard + hardening)**:
-  - UI for incident view, evidence drill-down, and auditability
+- `AzureClient.authenticate`, `query_log_analytics`, and `get_activity_logs` intentionally raise until implemented.
+- Configuration is read from environment variables, but **absence is acceptable in mock mode**.
 
 ### Security and access assumptions
 
-- No secrets committed to the repo.
-- Phase 2+ assumes least-privilege read access (e.g., Log Analytics Reader, Activity Log read).
-- Prefer managed identity when an Azure execution environment is introduced (later).
+- No secrets are stored in the repository.
+- Future Azure integration should remain **read-only** and least-privilege (e.g., Log Analytics Reader + activity log read) until the operational model is validated.
 
-### Out of scope for architecture (until after MVP)
+### Non-goals (current MVP)
 
-- Multi-tenant complexity (multiple tenants/subscriptions with different RBAC models)
-- Full topology graph modeling
-- Real-time streaming pipelines
-- Automated remediation workflows
+- Automated remediation or any write actions to Azure/on-prem devices
+- Continuous/streaming incident processing
+- Multi-tenant complexity and full topology discovery

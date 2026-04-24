@@ -1,70 +1,103 @@
 ## Hybrid Network Correlator
 
-A practical incident-correlation tool for **network and infrastructure administrators** operating **hybrid connectivity** (Azure ↔ on-prem).
+A practical incident-correlation tool for **network and infrastructure administrators** operating **hybrid connectivity** (Azure ↔ on-prem). The MVP is intentionally narrow and explainable: **deterministic, rule-based scoring** over **mock inputs**.
 
-### What it does (MVP)
+### Project purpose
 
-When connectivity between an **Azure VM** and an **on-prem endpoint** degrades or fails, the system:
+Hybrid connectivity incidents often require a human to manually piece together:
 
-- Looks at **recent Azure activity changes** near the incident window
-- Reviews relevant **telemetry and diagnostics evidence**
-- Produces a **probable-cause summary** and **next checks** for the administrator
+- what changed recently (NSG / routes / gateway changes)
+- what the symptoms look like (unreachable / packet loss / latency)
+- what evidence supports each hypothesis
 
-The MVP is intentionally narrow: it correlates a small set of common causes using **mock data** and **deterministic, rule-based scoring**.
+This project reduces time-to-triage by generating a concise, evidence-backed incident summary with recommended next checks.
 
-### Why this exists
+### Current MVP capabilities
 
-Hybrid incidents often require a human to manually piece together:
+The implemented MVP provides:
 
-- “What changed recently in Azure?”
-- “Which components are implicated?”
-- “What evidence supports each hypothesis?”
+- **Mock scenario ingestion**: loads an alert payload plus related activity/telemetry fixtures from `samples/`
+- **Rule-based correlation**: ranks likely causes across a small, practical hypothesis set:
+  - `NSG_CHANGE`, `ROUTE_UDR_CHANGE`, `VPN_GATEWAY_ISSUE`, `DNS_ISSUE`, `UNKNOWN`
+- **Three output formats**:
+  - `text`: administrator-friendly report
+  - `json`: detailed incident summary JSON (stable for tests)
+  - `dashboard`: compact JSON summary (for later UI ingestion)
+- **Evidence manifest scaffolding (prepare-only)**: builds a machine-readable “what evidence to collect next” manifest without executing any diagnostics
 
-This project aims to reduce time-to-triage by generating a concise, evidence-backed summary.
+### Safety note (Azure + evidence collection)
 
-### Project status
+- **Azure integration is scaffolded/read-only only**: `src/integrations/` contains placeholder configuration and query templates; **live authentication and live queries are not implemented**.
+- **Evidence collection is scaffolded/prepare-only only**: the Python evidence layer creates **action requests** and **operator instructions**; it does **not** execute PowerShell, start packet captures, or run live probes.
 
-- **Phase 1 (current target)**: mock data + rule-based correlation
-- Later phases add read-only Azure integration, evidence collection, and a dashboard
+### Repository structure
 
-See `[docs/backlog.md](docs/backlog.md)` for the phased roadmap and MVP backlog.
+- `src/`: Python correlation engine (CLI + scoring + output rendering) and scaffolding modules
+  - `src/correlator/`: CLI entrypoint, scenario loader, scoring engine, reporting
+  - `src/evidence/`: evidence manifest model + prepare-only “collection action” requests
+  - `src/integrations/`: Azure config + KQL template scaffolding (read-only placeholders)
+  - `src/tests/`: unit tests (MVP behavior + output formats + scaffolding safety)
+- `samples/`: deterministic JSON fixtures used by the MVP and unit tests
+- `scripts/powershell/`: optional, read-only diagnostic scripts admins can run manually
+- `docs/`: architecture, backlog, and operator-focused documentation
+
+### How to run the correlation engine
+
+From the repository root:
+
+```powershell
+# Text report (default)
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format text
+```
+
+Notes:
+
+- The `--scenario` value can be a full slug (recommended) such as:
+  - `scenario1_nsg_rule_change`
+  - `scenario2_udr_route_change`
+  - `scenario3_vpn_tunnel_instability`
+- A short selector like `scenario1` may work, but if multiple fixtures match, the selection is deterministic and may not be what you expect.
+
+### How to run output formats
+
+#### Text (admin report)
+
+```powershell
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format text
+```
+
+#### JSON (detailed incident summary)
+
+```powershell
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format json
+```
+
+#### Dashboard (compact JSON)
+
+```powershell
+python -m src.correlator.main --scenario scenario1_nsg_rule_change --format dashboard
+```
+
+### How to run unit tests
+
+From the repository root:
+
+```powershell
+python -m unittest discover -s src\tests -p "test_*.py"
+```
+
+### PowerShell diagnostic script overview
+
+For Windows / on-prem evidence collection during an incident, this repo includes **optional, read-only** scripts under `scripts/powershell/` that produce JSON output you can save and attach to an incident record:
+
+- `Test-NetworkPath.ps1`: DNS + reachability + TCP checks (optional traceroute-style evidence)
+- `Get-DnsDiagnostics.ps1`: DNS client/server settings and resolution attempts
+- `Get-WindowsNetworkSnapshot.ps1`: point-in-time network configuration snapshot
+
+See `docs/powershell-diagnostics.md` for usage details and safety guidance.
 
 ### Key documents
 
-- `[docs/vision.md](docs/vision.md)`: product vision, scope, and success criteria
-- `[docs/use-cases.md](docs/use-cases.md)`: MVP scenario and out-of-scope use cases
-- `[docs/architecture.md](docs/architecture.md)`: intended components and data flow (documentation-first)
-- `[docs/backlog.md](docs/backlog.md)`: phased roadmap and backlog items
-
-### Assumptions (MVP)
-
-- The incident involves **Azure VM → on-prem endpoint** connectivity (direct or via hub/spoke).
-- The system receives (or loads) an **alert payload** that provides:
-  - The Azure VM identity (name/id), on-prem endpoint (IP/FQDN), and time window
-  - Basic symptom labels (packet loss, latency spike, unreachable)
-- During Phase 1, all inputs are **mock JSON** (no live Azure calls).
-- Output is a **human-readable text report** (not a dashboard).
-
-### Out of scope (explicitly not MVP)
-
-- Automated remediation (changes to NSG/UDR/firewall, restarts, etc.)
-- Production deployments, CI/CD, or Azure infrastructure-as-code
-- Full topology discovery across all subscriptions/tenants
-- Real-time streaming analytics
-- Generative AI “free-form” root-cause reasoning (start deterministic first)
-
-### Repository structure (current / intended)
-
-- `README.md`: entry point for admins and contributors
-- `docs/`: documentation set (vision, use cases, architecture, backlog)
-- Source code and Azure deployment assets will be added **later**, after docs and data contracts are stable.
-
-### How to review changes
-
-- Open the updated docs in your editor:
-  - `README.md`
-  - `docs/vision.md`
-  - `docs/use-cases.md`
-  - `docs/architecture.md`
-  - `docs/backlog.md`
-- If you use git, review with `git diff` (or your IDE’s “Source Control” diff view).
+- `docs/architecture.md`: implemented module architecture and end-to-end data flow
+- `docs/backlog.md`: what’s completed, what’s remaining, and recommended next work
+- `docs/powershell-diagnostics.md`: safe, read-only Windows/on-prem evidence collection scripts

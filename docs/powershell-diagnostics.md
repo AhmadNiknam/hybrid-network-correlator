@@ -40,6 +40,10 @@ All scripts default to writing a **single JSON object** to stdout. Use `-OutputP
 **Notes**
 - ICMP and traceroute may be blocked by policy; treat failures as **non-deterministic evidence** rather than proof of outage.
 
+**How this fits the MVP**
+- The correlator does **not** run this script automatically.
+- Treat the JSON output as an **operator-collected artifact** that can be attached to an incident ticket and referenced during correlation.
+
 ### `Get-DnsDiagnostics.ps1`
 
 **Use when**
@@ -67,6 +71,9 @@ All scripts default to writing a **single JSON object** to stdout. Use `-OutputP
 
 **Notes**
 - Differences between resolvers can be expected in hybrid setups. Always capture *which DNS server(s)* were used.
+
+**How this fits the MVP**
+- The Python evidence layer can generate a **prepare-only** request to run diagnostics, but it does **not** execute PowerShell.
 
 ### `Get-WindowsNetworkSnapshot.ps1`
 
