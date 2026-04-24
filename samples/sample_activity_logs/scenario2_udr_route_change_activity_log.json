@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario2_udr_route_change",
+  "events": [
+    {
+      "eventId": "act-1101",
+      "timestamp": "2026-04-21T14:05:00Z",
+      "operationName": "Microsoft.Network/routeTables/routes/write",
+      "resourceId": "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Network/routeTables/rt-spoke-02/routes/onprem-10_50_60_0_24",
+      "status": "Succeeded",
+      "caller": "netops@example.com",
+      "summary": "UDR updated: 10.50.60.0/24 next hop changed to VirtualAppliance 10.1.2.3"
+    }
+  ]
+}
+

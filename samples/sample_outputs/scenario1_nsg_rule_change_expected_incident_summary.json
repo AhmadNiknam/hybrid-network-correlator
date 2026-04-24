@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario1_nsg_rule_change",
+  "incidentId": "INC-0001",
+  "timeWindow": {
+    "start": "2026-04-20T09:10:00Z",
+    "end": "2026-04-20T09:30:00Z"
+  },
+  "symptoms": ["unreachable", "tcp_connect_failed"],
+  "rankedCauses": [
+    {
+      "cause": "NSG_CHANGE",
+      "score": 9,
+      "confidence": 0.9,
+      "evidenceSupport": [
+        "Symptom suggests hard block/unreachable, consistent with policy block (NSG/ACL)",
+        "Activity change near incident window: act-1001 NSG securityRules/write",
+        "Connectivity probe failed to 10.20.30.40:443: obs-2001",
+        "Telemetry indicates NSG blocking flow: obs-2002 blocked (Matched rule deny_443_to_onprem on nsg-spoke-01)"
+      ],
+      "evidenceAgainst": [],
+      "nextChecks": [
+        "Review effective NSG rules on the VM NIC/subnet for the destination/port",
+        "Confirm the recent NSG rule change was intended; revert/adjust priority if not"
+      ]
+    },
+    {
+      "cause": "VPN_GATEWAY_ISSUE",
+      "score": 1,
+      "confidence": 0.1,
+      "evidenceSupport": [
+        "Connectivity is failing, gateway issues are a possible contributor",
+        "Connectivity probe failed to 10.20.30.40:443: obs-2001"
+      ],
+      "evidenceAgainst": [
+        "VPN tunnel health looks healthy: obs-2004"
+      ],
+      "nextChecks": []
+    },
+    {
+      "cause": "UNKNOWN",
+      "score": 0,
+      "confidence": 0.0,
+      "evidenceSupport": [],
+      "evidenceAgainst": [
+        "Strong, specific evidence points to a different cause"
+      ],
+      "nextChecks": [
+        "Collect additional evidence if the issue does not align with the top hypotheses"
+      ]
+    }
+  ],
+  "summaryText": "Probable cause: a recent NSG rule change is blocking traffic between vm-app-01 and 10.20.30.40:443. Supporting evidence: act-1001, obs-2001, obs-2002."
+}
+

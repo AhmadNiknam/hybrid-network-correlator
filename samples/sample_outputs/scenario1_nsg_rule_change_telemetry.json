@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario1_nsg_rule_change",
+  "observations": [
+    {
+      "observationId": "obs-2001",
+      "timestamp": "2026-04-20T09:14:00Z",
+      "type": "connectivity_probe",
+      "target": "10.20.30.40:443",
+      "result": "fail",
+      "details": "SYN retries, no response"
+    },
+    {
+      "observationId": "obs-2002",
+      "timestamp": "2026-04-20T09:15:00Z",
+      "type": "nsg_effective_flow",
+      "result": "blocked",
+      "details": "Matched rule deny_443_to_onprem on nsg-spoke-01"
+    },
+    {
+      "observationId": "obs-2003",
+      "timestamp": "2026-04-20T09:16:00Z",
+      "type": "dns_resolution",
+      "query": "onprem-app.contoso.local",
+      "result": "not_tested"
+    },
+    {
+      "observationId": "obs-2004",
+      "timestamp": "2026-04-20T09:17:00Z",
+      "type": "vpn_tunnel_health",
+      "result": "healthy",
+      "details": "All tunnels Up"
+    }
+  ]
+}
+

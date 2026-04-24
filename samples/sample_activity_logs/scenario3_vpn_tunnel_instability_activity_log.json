@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario3_vpn_tunnel_instability",
+  "events": [
+    {
+      "eventId": "act-1201",
+      "timestamp": "2026-04-22T01:20:00Z",
+      "operationName": "Microsoft.Network/virtualNetworkGateways/write",
+      "resourceId": "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Network/virtualNetworkGateways/vpngw-hub-01",
+      "status": "Succeeded",
+      "caller": "netops@example.com",
+      "summary": "Gateway configuration updated (pre-incident)"
+    }
+  ]
+}
+

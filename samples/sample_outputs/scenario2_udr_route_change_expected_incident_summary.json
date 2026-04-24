@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario2_udr_route_change",
+  "incidentId": "INC-0002",
+  "timeWindow": {
+    "start": "2026-04-21T14:00:00Z",
+    "end": "2026-04-21T14:30:00Z"
+  },
+  "symptoms": ["latency_spike", "intermittent"],
+  "rankedCauses": [
+    {
+      "cause": "ROUTE_UDR_CHANGE",
+      "score": 8,
+      "confidence": 0.8,
+      "evidenceSupport": [
+        "Latency spikes can be caused by routing changes (path length/appliance)",
+        "Activity change near incident window: act-1101 routeTables/routes/write",
+        "Connectivity probe degraded to 10.50.60.70:1433: obs-2101",
+        "Telemetry indicates effective route changed: obs-2102 changed (Destination 10.50.60.0/24 now via VirtualAppliance 10.1.2.3 (rt-spoke-02))"
+      ],
+      "evidenceAgainst": [],
+      "nextChecks": [
+        "Review effective routes on the VM NIC for the on-prem destination",
+        "Validate next hop (appliance/gateway) health and routing; revert UDR if unintended"
+      ]
+    },
+    {
+      "cause": "VPN_GATEWAY_ISSUE",
+      "score": 3,
+      "confidence": 0.3,
+      "evidenceSupport": [
+        "Intermittent/packet loss symptoms are consistent with tunnel instability",
+        "Latency/jitter can be caused by gateway/tunnel performance issues",
+        "Connectivity probe degraded to 10.50.60.70:1433: obs-2101"
+      ],
+      "evidenceAgainst": [
+        "VPN tunnel health looks healthy: obs-2103"
+      ],
+      "nextChecks": []
+    },
+    {
+      "cause": "UNKNOWN",
+      "score": 0,
+      "confidence": 0.0,
+      "evidenceSupport": [],
+      "evidenceAgainst": [
+        "Strong, specific evidence points to a different cause"
+      ],
+      "nextChecks": [
+        "Collect additional evidence if the issue does not align with the top hypotheses"
+      ]
+    }
+  ],
+  "summaryText": "Probable cause: a recent route/UDR change altered the path and degraded connectivity between vm-api-02 and 10.50.60.70:1433. Supporting evidence: act-1101, obs-2101, obs-2102."
+}
+

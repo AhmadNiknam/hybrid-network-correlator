@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario3_vpn_tunnel_instability",
+  "observations": [
+    {
+      "observationId": "obs-2201",
+      "timestamp": "2026-04-22T02:05:00Z",
+      "type": "connectivity_probe",
+      "target": "db01.onprem.local:1433",
+      "result": "degraded",
+      "details": "Intermittent timeouts; 25% packet loss"
+    },
+    {
+      "observationId": "obs-2202",
+      "timestamp": "2026-04-22T02:06:00Z",
+      "type": "dns_resolution",
+      "query": "db01.onprem.local",
+      "result": "ok",
+      "details": "Resolved to 10.99.0.10"
+    },
+    {
+      "observationId": "obs-2203",
+      "timestamp": "2026-04-22T02:07:00Z",
+      "type": "vpn_tunnel_health",
+      "result": "degraded",
+      "details": "Tunnel flap detected; 3 drops in last 10 minutes"
+    }
+  ]
+}
+

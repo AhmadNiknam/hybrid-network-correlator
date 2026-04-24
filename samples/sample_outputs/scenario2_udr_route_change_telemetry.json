@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario2_udr_route_change",
+  "observations": [
+    {
+      "observationId": "obs-2101",
+      "timestamp": "2026-04-21T14:10:00Z",
+      "type": "connectivity_probe",
+      "target": "10.50.60.70:1433",
+      "result": "degraded",
+      "details": "Median RTT increased from 30ms to 280ms; 10% timeouts"
+    },
+    {
+      "observationId": "obs-2102",
+      "timestamp": "2026-04-21T14:12:00Z",
+      "type": "effective_route",
+      "result": "changed",
+      "details": "Destination 10.50.60.0/24 now via VirtualAppliance 10.1.2.3 (rt-spoke-02)"
+    },
+    {
+      "observationId": "obs-2103",
+      "timestamp": "2026-04-21T14:13:00Z",
+      "type": "vpn_tunnel_health",
+      "result": "healthy",
+      "details": "All tunnels Up"
+    }
+  ]
+}
+

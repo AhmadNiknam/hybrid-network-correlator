@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0",
+  "scenario": "scenario3_vpn_tunnel_instability",
+  "incidentId": "INC-0003",
+  "timeWindow": {
+    "start": "2026-04-22T02:00:00Z",
+    "end": "2026-04-22T02:30:00Z"
+  },
+  "symptoms": ["intermittent", "packet_loss"],
+  "rankedCauses": [
+    {
+      "cause": "VPN_GATEWAY_ISSUE",
+      "score": 8,
+      "confidence": 0.8,
+      "evidenceSupport": [
+        "Intermittent/packet loss symptoms are consistent with tunnel instability",
+        "Connectivity probe degraded to db01.onprem.local:1433: obs-2201",
+        "VPN tunnel health degraded: obs-2203 degraded (Tunnel flap detected; 3 drops in last 10 minutes)"
+      ],
+      "evidenceAgainst": [],
+      "nextChecks": [
+        "Check VPN gateway/tunnel diagnostics for drops, BGP issues, and packet loss during the incident window",
+        "Validate on-prem VPN device status and ISP stability for the same time window"
+      ]
+    },
+    {
+      "cause": "DNS_ISSUE",
+      "score": 1,
+      "confidence": 0.1,
+      "evidenceSupport": [
+        "Endpoint is an FQDN; DNS issues can sometimes cause intermittent failures"
+      ],
+      "evidenceAgainst": [
+        "DNS resolution succeeded: obs-2202"
+      ],
+      "nextChecks": []
+    },
+    {
+      "cause": "UNKNOWN",
+      "score": 0,
+      "confidence": 0.0,
+      "evidenceSupport": [],
+      "evidenceAgainst": [
+        "Strong, specific evidence points to a different cause"
+      ],
+      "nextChecks": [
+        "Collect additional evidence if the issue does not align with the top hypotheses"
+      ]
+    }
+  ],
+  "summaryText": "Probable cause: VPN gateway/tunnel instability is impacting connectivity between vm-batch-03 and db01.onprem.local:1433. Supporting evidence: obs-2201, obs-2203."
+}
+
