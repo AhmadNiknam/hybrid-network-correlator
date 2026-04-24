@@ -1,10 +1,10 @@
-# Notifications (scaffolding only)
+# Notifications (safe by default)
 
-This document describes the **prepare-only notification layer** for the Hybrid Network Correlator MVP.
+This document describes the notification layer for the Hybrid Network Correlator MVP.
 
 ## Current design (today)
 
-The notification package exists to **format** incident reports for future delivery channels without sending anything yet.
+The notification package exists to **format** incident reports for delivery channels while keeping the MVP safe by default.
 
 - **Data models**: `src/notifications/models.py` defines recipients, messages, channels, and dispatch results.
 - **Templates**: `src/notifications/templates.py` renders:
@@ -12,7 +12,7 @@ The notification package exists to **format** incident reports for future delive
   - detailed email incident report (plain text)
   - compact webhook payload (JSON-ready dict)
 - **Config**: `src/notifications/config.py` reads optional environment variables.
-- **Dispatcher**: `src/notifications/dispatcher.py` returns **simulated** results by default and returns **"live dispatch not implemented"** even when enabled.
+- **Dispatcher**: `src/notifications/dispatcher.py` returns **simulated** results by default.
 
 This mirrors the project’s overall MVP safety posture: **read-only** and **scaffold-first**.
 
@@ -26,12 +26,23 @@ The scaffolding supports these delivery channels conceptually:
 
 ## Safety model (why no real messages are sent)
 
-Notifications are intentionally safe in the MVP:
+Notifications are intentionally safe in the MVP by default:
 
 - **No external APIs**: no network calls are made.
 - **No live email/SMS**: no SMTP, SMS gateway, or provider SDK calls are made.
 - **No secrets required**: tests run with no environment variables set.
-- **Explicit guardrail**: `dispatch_notification()` returns simulated results unless `NOTIFICATIONS_ENABLED=true`, and even then returns **"live dispatch not implemented"** and performs no delivery.
+- **Explicit guardrail**: `dispatch_notification()` returns simulated results unless `NOTIFICATIONS_ENABLED=true`.
+
+### Exception: Teams webhook delivery (explicit opt-in)
+
+Microsoft Teams webhook delivery is implemented, but will only send when all are true:
+
+- `NOTIFICATIONS_ENABLED=true`
+- `TEAMS_ENABLED=true`
+- `TEAMS_WEBHOOK_URL` is provided
+- the message is routed to `teams/webhook`
+
+See `docs/enterprise-notifications.md` for setup and security guidance.
 
 This reduces risk of accidental contact, data leakage, and unreviewed operational behavior during early development.
 

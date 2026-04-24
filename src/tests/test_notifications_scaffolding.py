@@ -5,7 +5,6 @@ import socket
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-
 from src.notifications.config import load_notification_config
 from src.notifications.dispatcher import (
     dispatch_notification,
@@ -112,6 +111,7 @@ class TestNotificationScaffolding(unittest.TestCase):
         recipient = NotificationRecipient(channel=NotificationChannel.WEBHOOK, address="https://example.invalid/hook")
         msg = prepare_webhook_notification(incident_summary=summary, recipient=recipient)
 
+        # Still safe by default: Teams is disabled unless TEAMS_ENABLED=true and a webhook URL is set.
         # If any delivery mechanism is attempted, these patched calls should fail.
         with patch.dict("os.environ", {"NOTIFICATIONS_ENABLED": "true"}, clear=True):
             with patch("smtplib.SMTP", side_effect=AssertionError("SMTP used")):
@@ -124,9 +124,65 @@ class TestNotificationScaffolding(unittest.TestCase):
                         ):
                             result = dispatch_notification(message=msg, recipient=recipient)
 
+        self.assertTrue(result.ok)
+        self.assertTrue(result.simulated)
+        self.assertEqual(result.status, "simulated")
+
+    def test_teams_enabled_missing_webhook_fails_safely(self) -> None:
+        summary = self._load_sample_incident_summary()
+        recipient = NotificationRecipient(channel=NotificationChannel.WEBHOOK, address="https://example.invalid/hook")
+        msg = prepare_webhook_notification(incident_summary=summary, recipient=recipient)
+
+        with patch.dict(
+            "os.environ",
+            {"NOTIFICATIONS_ENABLED": "true", "TEAMS_ENABLED": "true"},
+            clear=True,
+        ):
+            with patch("urllib.request.urlopen", side_effect=AssertionError("urlopen used")):
+                result = dispatch_notification(message=msg, recipient=recipient)
+
         self.assertFalse(result.ok)
         self.assertFalse(result.simulated)
-        self.assertEqual(result.status, "live_dispatch_not_implemented")
+        self.assertEqual(result.status, "failed")
+        self.assertIn("TEAMS_WEBHOOK_URL", result.detail)
+
+    def test_teams_enabled_sends_via_urllib_and_does_not_expose_url(self) -> None:
+        summary = self._load_sample_incident_summary()
+        recipient = NotificationRecipient(channel=NotificationChannel.WEBHOOK, address="https://example.invalid/hook")
+        msg = prepare_webhook_notification(incident_summary=summary, recipient=recipient)
+
+        class _FakeResp:
+            status = 200
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        def _fake_urlopen(req, timeout=None):
+            # Assert we never accidentally try to hit a real network URL from the message/recipient.
+            self.assertNotIn("https://example.invalid/hook", getattr(req, "full_url", ""))
+            self.assertIsNotNone(timeout)
+            return _FakeResp()
+
+        with patch.dict(
+            "os.environ",
+            {
+                "NOTIFICATIONS_ENABLED": "true",
+                "TEAMS_ENABLED": "true",
+                "TEAMS_WEBHOOK_URL": "https://webhook.example.invalid/teams",
+            },
+            clear=True,
+        ):
+            with patch("urllib.request.urlopen", side_effect=_fake_urlopen) as mocked:
+                result = dispatch_notification(message=msg, recipient=recipient)
+                self.assertTrue(mocked.called)
+
+        self.assertTrue(result.ok)
+        self.assertFalse(result.simulated)
+        self.assertEqual(result.status, "sent")
+        self.assertNotIn("webhook.example.invalid", result.detail)
 
     def test_prepare_functions_match_channel(self) -> None:
         summary = self._load_sample_incident_summary()

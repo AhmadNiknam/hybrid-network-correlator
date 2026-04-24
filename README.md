@@ -34,6 +34,7 @@ When “Azure VM → on‑prem endpoint” connectivity fails, responders often 
 - **Safety by design**:
   - **Azure integration** is scaffolded **read-only placeholders** (no live auth/queries in MVP)
   - evidence collection is **prepare-only** (creates “what to collect” manifests; does not run diagnostics automatically)
+  - **Teams webhook delivery is implemented but disabled by default** (requires explicit enablement flags)
 
 ### Current status (MVP)
 
@@ -42,7 +43,10 @@ When “Azure VM → on‑prem endpoint” connectivity fails, responders often 
   - Deterministic scoring over a small hypothesis set:
     - `NSG_CHANGE`, `ROUTE_UDR_CHANGE`, `VPN_GATEWAY_ISSUE`, `DNS_ISSUE`, `UNKNOWN`
   - Output formats: `text`, `json`, `dashboard`
-  - Notification layer **scaffolding only** (email/SMS/webhook models + templates + simulated dispatch; no live sending)
+  - Notification layer with **safe defaults**:
+    - email/SMS templates (no live sending)
+    - webhook payload templates
+    - **Microsoft Teams webhook delivery (disabled by default)**
   - Unit tests verifying stable outputs and safety constraints
 - **What is intentionally not implemented yet**:
   - Live Azure query execution/authentication
@@ -123,6 +127,9 @@ This repo includes a safe template at `.env.example`.
 
 - Copy `.env.example` to `.env` locally.
 - Keep `LIVE_AZURE_ENABLED=false` (default). Live Azure integration is not implemented yet.
+- Keep notifications disabled unless you explicitly intend to send messages:
+  - `NOTIFICATIONS_ENABLED=false` (default)
+  - `TEAMS_ENABLED=false` (default)
 - Never commit `.env` or any secrets.
 
 ### Tested modules (unit tests)

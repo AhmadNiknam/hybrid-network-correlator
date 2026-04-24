@@ -56,6 +56,16 @@ Rules:
 - Examples must use placeholders like `<tenant-id>` and `<subscription-id>`.
 - Evidence artifacts from real incidents must never be committed to the repo.
 
+## Webhooks (Teams) are secrets (implemented, disabled by default)
+
+This MVP now includes a **Microsoft Teams webhook dispatcher**, but it is **disabled by default** and requires explicit enablement flags.
+
+Security expectations:
+
+- Treat `TEAMS_WEBHOOK_URL` as a **secret**.
+- Do not print, log, or return webhook URLs in application output.
+- Store webhook URLs in a secret store (CI secrets, app settings, Key Vault in future deployment), not in git-tracked files.
+
 ## Future authentication approach (managed identity)
 
 If/when Azure queries are implemented, the preferred approach is:

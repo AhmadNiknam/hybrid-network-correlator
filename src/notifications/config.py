@@ -14,11 +14,17 @@ def _parse_bool(value: Optional[str]) -> bool:
 
 @dataclass(frozen=True)
 class NotificationConfig:
+    # Master guardrail: if false, dispatch must be simulated only.
+    enabled: bool = False
+
+    # Channel-specific enablement
     emailEnabled: bool = False
     teamsEnabled: bool = False
 
     # Shared / routing fields (optional in MVP)
     adminEmail: Optional[str] = None
+    adminPhoneE164: Optional[str] = None
+    adminWebhookUrl: Optional[str] = None
     teamsWebhookUrl: Optional[str] = None
 
     # SMTP scaffolding fields (optional; no live delivery yet)
@@ -37,7 +43,11 @@ def load_notification_config(env: Optional[dict[str, str]] = None) -> Notificati
     """
     source = env if env is not None else os.environ
 
+    enabled = _parse_bool(source.get("NOTIFICATIONS_ENABLED"))
+
     admin_email = source.get("ADMIN_EMAIL") or None
+    admin_phone = source.get("ADMIN_PHONE_E164") or None
+    admin_webhook = source.get("ADMIN_WEBHOOK_URL") or None
     teams_webhook = source.get("TEAMS_WEBHOOK_URL") or None
 
     email_enabled = _parse_bool(source.get("EMAIL_ENABLED"))
@@ -56,9 +66,12 @@ def load_notification_config(env: Optional[dict[str, str]] = None) -> Notificati
     email_from = source.get("EMAIL_FROM") or None
 
     return NotificationConfig(
+        enabled=enabled,
         emailEnabled=email_enabled,
         teamsEnabled=teams_enabled,
         adminEmail=admin_email,
+        adminPhoneE164=admin_phone,
+        adminWebhookUrl=admin_webhook,
         teamsWebhookUrl=teams_webhook,
         smtpHost=smtp_host,
         smtpPort=smtp_port,
