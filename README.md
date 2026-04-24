@@ -10,7 +10,7 @@
 
 ### Release information
 
-- **Current stable version**: **v1.2.0**
+- **Current stable version**: **v1.3.0**
 - **Release status**: **Public MVP**
 
 ### Trust and safety statement
@@ -72,10 +72,12 @@ python -m src.correlator.main --scenario scenario1_nsg_rule_change --format dash
 # Notification mode (safe by default)
 # - Default is "--notify none" (no behavior change)
 # - Teams is guarded by environment flags; see docs/enterprise-notifications.md
-python -m src.correlator.main --scenario scenario1_nsg_rule_change --format text --notify none
-python -m src.correlator.main --scenario scenario1_nsg_rule_change --format text --notify teams
+python -m src.correlator.main --scenario scenario1 --format text --notify none
+python -m src.correlator.main --scenario scenario1 --format text --notify teams
 python -m src.correlator.main --scenario scenario1_nsg_rule_change --format dashboard --notify teams
 ```
+
+Teams notifications are **disabled by default**. Selecting `--notify teams` does not send a message unless notification delivery is explicitly enabled in the runtime environment, including `TEAMS_ENABLED=true` and a configured `TEAMS_WEBHOOK_URL`. See `docs/enterprise-notifications.md` for the full guardrails, including the global `NOTIFICATIONS_ENABLED=true` requirement.
 
 Scenario slugs included:
 
@@ -150,6 +152,7 @@ The MVP includes unit tests validating output stability and safety boundaries ac
 - **Scenario loading and expected outputs**: `src.correlator.loader` + `samples/` fixtures
 - **Evidence scaffolding (prepare-only)**: `src.evidence.collectors`, `src.evidence.manifest`, `src.evidence.packager`
 - **Integration scaffolding**: `src.integrations.kql_queries` (KQL template helpers) and `src.integrations.config` (Azure env config loading)
+- **Notification workflow**: CLI `--notify none|teams`, disabled-by-default Teams behavior, missing webhook handling, and secret-safe mocked Teams delivery
 
 ### Repository map
 
@@ -204,4 +207,7 @@ This project is intentionally scoped as a **portfolio-grade MVP**: small, explai
 - `docs/powershell-diagnostics.md`: safe, read-only Windows/on-prem evidence collection scripts
 - `docs/release-notes-v1.md`: v1.0.0 public MVP release notes
 - `docs/release-notes-v1.1.md`: v1.1.0 release notes (notification scaffolding and safety model)
+- `docs/release-notes-v1.2.md`: v1.2.0 release notes (Teams delivery guardrails and CI baseline)
+- `docs/release-notes-v1.3.md`: v1.3.0 release notes (CLI notification workflow)
 - `docs/notifications.md`: notification layer scaffolding (simulated/prepare-only)
+- `docs/enterprise-notifications.md`: Microsoft Teams webhook setup and safe enablement guidance

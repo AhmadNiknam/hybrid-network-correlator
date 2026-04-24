@@ -5,18 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.1.0 - 2026-04-23
+## v1.3.0 - 2026-04-24
 
 ### Added
-- Notification layer scaffolding (prepare-only) to format incident reports for future delivery channels.
-- Email, SMS, and webhook notification models.
-- Safe simulated dispatch behavior (no live sending).
-- Notification documentation under `docs/notifications.md`.
+- **CLI notification workflow**: the CLI now supports explicit notification selection through `--notify none` and `--notify teams`.
+- **Microsoft Teams CLI option**: `--notify teams` can route a generated incident summary to the Teams webhook delivery path.
+- **Release documentation** for v1.3.0 covering safe usage, known limitations, and the forward roadmap. See `docs/release-notes-v1.3.md`.
+
+### Implemented
+- **Safe disabled-by-default notification behavior**: the default CLI path remains `--notify none`, preserving the existing report-only workflow with no notification side effects.
+- **Environment-based Teams delivery**: Teams delivery remains guarded by environment configuration and only sends when notifications are explicitly enabled and `TEAMS_WEBHOOK_URL` is supplied.
+- **Notification workflow test coverage**: tests verify default no-op behavior, disabled Teams mode, missing webhook handling, mocked Teams delivery, and avoidance of webhook secret disclosure in CLI output.
 
 ### Security
-- No live sending: the MVP does not send real email/SMS/webhook notifications.
-- No real contact details in the repository: examples use placeholders and recommend environment variables.
-- No external API calls: notification dispatch is simulated and does not invoke provider SDKs or network requests.
+- **No accidental notification delivery**: Teams notifications remain disabled by default and require explicit CLI selection plus environment opt-in.
+- **Webhook secret handling preserved**: Teams webhook URLs must be supplied outside source control and must not be logged or committed.
+- **No production deployment claim**: this release documents a safer operator workflow for local/controlled evaluation; it does not introduce production deployment automation.
 
 ## v1.2.0 - 2026-04-24
 
@@ -35,6 +39,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Safe defaults preserved**: notifications and live Azure mode remain off unless explicitly enabled via environment flags.
 - **Webhook secret handling**: documentation reinforces treating `TEAMS_WEBHOOK_URL` as a secret and avoiding logging/committing sensitive endpoints.
 - **Read-only Azure posture reinforced**: live Azure integration remains a controlled, read-only readiness design—not a production Azure integration.
+
+## v1.1.0 - 2026-04-23
+
+### Added
+- Notification layer scaffolding (prepare-only) to format incident reports for future delivery channels.
+- Email, SMS, and webhook notification models.
+- Safe simulated dispatch behavior (no live sending).
+- Notification documentation under `docs/notifications.md`.
+
+### Security
+- No live sending: the MVP does not send real email/SMS/webhook notifications.
+- No real contact details in the repository: examples use placeholders and recommend environment variables.
+- No external API calls: notification dispatch is simulated and does not invoke provider SDKs or network requests.
 
 ## v1.0.0 - 2026-04-23
 
