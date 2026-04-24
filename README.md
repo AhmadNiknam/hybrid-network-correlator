@@ -10,7 +10,7 @@
 
 ### Release information
 
-- **Current stable version**: **v1.1.0**
+- **Current stable version**: **v1.2.0**
 - **Release status**: **Public MVP**
 
 ### Trust and safety statement
@@ -20,7 +20,7 @@ This repository is designed to be safe to evaluate and run in a local environmen
 - **Read-only / safe scaffolding**: the MVP uses mock fixtures and deterministic logic; Azure integration is scaffolded as placeholders.
 - **No destructive Azure actions**: there are no automated “write” operations, remediation steps, or resource-modifying commands.
 - **Prepare-only evidence guidance**: evidence collection outputs are manifests describing what to collect; they do not execute diagnostics automatically.
-- **Live Azure readiness (future)**: live Azure read-only integration is **disabled by default** and is not implemented yet. See `docs/live-azure-readiness.md`.
+- **Live Azure readiness (read-only, future)**: controlled, explicit enablement for a **future** read-only mode. It is **disabled by default** and **not implemented yet**. See `docs/live-azure-readiness.md`.
 
 ### Elevator pitch
 
@@ -52,7 +52,8 @@ When “Azure VM → on‑prem endpoint” connectivity fails, responders often 
   - Live Azure query execution/authentication
   - Any “write” actions or automated remediation
   - Automatic PowerShell execution / packet capture / live probing
-  - Live notification delivery (no real email/SMS/webhook sending in the MVP)
+  - Live email/SMS notification delivery (templates exist; delivery is not implemented)
+  - Live webhooks beyond Microsoft Teams (future)
 
 ### Quick start (CLI)
 
@@ -119,15 +120,17 @@ python -m unittest discover -s src\tests -p "test_*.py"
 
 ### Continuous Integration
 
-Unit tests run automatically in GitHub Actions on **push** and **pull request**. See the **CI** badge above and the workflow runs under the repository’s **Actions** tab.
+Unit tests run automatically in GitHub Actions on **push** and **pull request**. See the **CI** badge above, and check runs under the repository’s **Actions** tab.
+
+Note: CI currently runs `python -m unittest -v` on Ubuntu with Python 3.11 (see `.github/workflows/python-tests.yml`).
 
 ### Configuration (.env)
 
 This repo includes a safe template at `.env.example`.
 
 - Copy `.env.example` to `.env` locally.
-- Keep `LIVE_AZURE_ENABLED=false` (default). Live Azure integration is not implemented yet.
-- Keep notifications disabled unless you explicitly intend to send messages:
+- Keep `LIVE_AZURE_ENABLED=false` (default). Live Azure integration is **read-only readiness** and is not implemented yet.
+- Keep notifications disabled unless you explicitly intend to send messages (safe defaults):
   - `NOTIFICATIONS_ENABLED=false` (default)
   - `TEAMS_ENABLED=false` (default)
 - Never commit `.env` or any secrets.
