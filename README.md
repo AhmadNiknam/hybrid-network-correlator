@@ -7,6 +7,19 @@
 
 **Hybrid Network Correlator** is a practical incident-correlation tool for **network and infrastructure administrators** operating **hybrid connectivity** (Azure ↔ on‑prem). It generates a concise, evidence-backed triage summary by correlating **recent changes** with **telemetry signals** using **deterministic, explainable scoring**.
 
+### Release information
+
+- **Current stable version**: **v1.0.0**
+- **Release status**: **Public MVP**
+
+### Trust and safety statement
+
+This repository is designed to be safe to evaluate and run in a local environment:
+
+- **Read-only / safe scaffolding**: the MVP uses mock fixtures and deterministic logic; Azure integration is scaffolded as placeholders.
+- **No destructive Azure actions**: there are no automated “write” operations, remediation steps, or resource-modifying commands.
+- **Prepare-only evidence guidance**: evidence collection outputs are manifests describing what to collect; they do not execute diagnostics automatically.
+
 ### Elevator pitch
 
 When “Azure VM → on‑prem endpoint” connectivity fails, responders often bounce between activity logs, routing/NSG checks, and ad-hoc diagnostics. This project turns that hunt into a **repeatable workflow**: **input a scoped alert + evidence bundle → get ranked probable causes + supporting evidence + next checks**.
@@ -96,6 +109,15 @@ More sanitized sample reports live in `samples/sample_outputs/`.
 python -m unittest discover -s src\tests -p "test_*.py"
 ```
 
+### Tested modules (unit tests)
+
+The MVP includes unit tests validating output stability and safety boundaries across these areas:
+
+- **CLI and output formats**: `src.correlator.main` (text/json/dashboard output shapes)
+- **Scenario loading and expected outputs**: `src.correlator.loader` + `samples/` fixtures
+- **Evidence scaffolding (prepare-only)**: `src.evidence.collectors`, `src.evidence.manifest`, `src.evidence.packager`
+- **Integration scaffolding**: `src.integrations.kql_queries` (KQL template helpers) and `src.integrations.config` (Azure env config loading)
+
 ### Repository map
 
 - `src/`: Python correlation engine (CLI + scoring + output rendering) and scaffolding modules
@@ -134,3 +156,4 @@ This project is intentionally scoped as a **portfolio-grade MVP**: small, explai
 - `docs/architecture.md`: implemented module architecture and data flow
 - `docs/backlog.md`: phased roadmap and next recommended work
 - `docs/powershell-diagnostics.md`: safe, read-only Windows/on-prem evidence collection scripts
+- `docs/release-notes-v1.md`: v1.0.0 public MVP release notes
